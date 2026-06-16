@@ -29,7 +29,7 @@ jobs:
     name: Run Action
     runs-on: ubuntu-latest
     steps:
-      - uses: sibipro/codeowners-coverage@v1
+      - uses: marcofranzen99/codeowners-coverage@v1
 ```
 
 #### Example with PR comment
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: sibipro/codeowners-coverage@v1
+      - uses: marcofranzen99/codeowners-coverage@v1
         with:
           comment-on-pr: 'true'
 ```
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@v3
       - id: changed-files
         uses: tj-actions/changed-files@v29.0.3
-      - uses: sibipro/codeowners-coverage@v1
+      - uses: marcofranzen99/codeowners-coverage@v1
         with:
           ignore-default: 'true'
           files: ${{ steps.changed-files.outputs.all_changed_files }}
