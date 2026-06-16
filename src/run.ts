@@ -202,6 +202,8 @@ export const runAction = async (
       );
     }
     core.setFailed(`${filesNotCovered.length} files not covered by CODEOWNERS`);
+  } else if (input.commentOnPr) {
+    await updatePrCommentAllCovered(_octokit, allFilesClean.length);
   }
 };
 
@@ -265,6 +267,45 @@ async function createOrUpdatePrComment(
     });
     core.info("Created CODEOWNERS coverage PR comment.");
   }
+}
+
+async function updatePrCommentAllCovered(
+  octokit: ReturnType<typeof github.getOctokit>,
+  totalFiles: number
+): Promise<void> {
+  const { context } = github;
+  const pullNumber = context.payload.pull_request?.number;
+  if (!pullNumber) {
+    return;
+  }
+
+  const { owner, repo } = context.repo;
+
+  const { data: comments } = await octokit.rest.issues.listComments({
+    owner,
+    repo,
+    issue_number: pullNumber,
+  });
+
+  const existing = comments.find((c) => c.body?.includes(COMMENT_MARKER));
+  if (!existing) {
+    return;
+  }
+
+  const body = [
+    COMMENT_MARKER,
+    `## CODEOWNERS Coverage`,
+    "",
+    `**${totalFiles}/${totalFiles} (100.00%)** files covered by CODEOWNERS :tada:`,
+  ].join("\n");
+
+  await octokit.rest.issues.updateComment({
+    owner,
+    repo,
+    comment_id: existing.id,
+    body,
+  });
+  core.info("Updated existing CODEOWNERS coverage PR comment: all files covered.");
 }
 
 function codeownerPatternToGlob(pattern: string): string {
