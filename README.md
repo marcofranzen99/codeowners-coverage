@@ -32,6 +32,27 @@ jobs:
       - uses: sibipro/codeowners-coverage@v1
 ```
 
+#### Example with PR comment
+Post a comment on pull requests listing files not covered by CODEOWNERS.
+```yml
+name: CODEOWNERS
+on:
+  pull_request:
+
+permissions:
+  pull-requests: write
+
+jobs:
+  run:
+    name: Check Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: sibipro/codeowners-coverage@v1
+        with:
+          comment-on-pr: 'true'
+```
+
 #### Example changed files in PR
 Pass the files in to check only specific files. Combine with [tj-actions/changed-files](https://github.com/tj-actions/changed-files) to check only files changed.
 ```yml
@@ -62,7 +83,8 @@ Various inputs are defined in [`action.yml`](action.yml):
 | github&#x2011;token | Token to use to authorize. | ${{&nbsp;github.token&nbsp;}} |
 | include-gitignore | Whether to filter our files in .gitignore | true |
 | ignore-default | Whether to ignore the default rule `*` in CODEOWNERS file | false |
-| files          | Filter check to only specific files | N/A
+| files          | Filter check to only specific files | N/A |
+| comment-on-pr  | Post a PR comment listing uncovered files (requires `pull-requests: write` permission) | false |
 <!-- 
 ## ⬅️ Outputs
 | Name | Description |

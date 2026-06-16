@@ -29,6 +29,10 @@ inputs:
     description: Interpret lines starting with '#?' as unowned files that do not need to be covered
     default: "true"
     required: false
+  comment-on-pr:
+    description: Whether to post a pull request comment when files are not covered by CODEOWNERS
+    default: "false"
+    required: false
 
 runs:
   using: "node20"

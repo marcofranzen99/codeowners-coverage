@@ -9,6 +9,7 @@ interface Input {
   includeGit: boolean;
   ignoreDefault: boolean;
   parseUnownedFiles: boolean;
+  commentOnPr: boolean;
   files: string;
 }
 
@@ -19,6 +20,7 @@ export function getInputs(): Input {
   result.includeGit = core.getBooleanInput("include-git");
   result.ignoreDefault = core.getBooleanInput("ignore-default");
   result.parseUnownedFiles = core.getBooleanInput("parse-unowned-files");
+  result.commentOnPr = core.getBooleanInput("comment-on-pr");
   result.files = core.getInput("files");
   return result;
 }
@@ -191,9 +193,79 @@ export const runAction = async (
   }
 
   if (filesNotCovered.length > 0) {
+    if (input.commentOnPr) {
+      await createOrUpdatePrComment(
+        _octokit,
+        coveragePercent,
+        filesNotCovered,
+        allFilesClean.length
+      );
+    }
     core.setFailed(`${filesNotCovered.length} files not covered by CODEOWNERS`);
   }
 };
+
+const COMMENT_MARKER = "<!-- codeowners-coverage -->";
+
+async function createOrUpdatePrComment(
+  octokit: ReturnType<typeof github.getOctokit>,
+  coveragePercent: number,
+  filesNotCovered: string[],
+  totalFiles: number
+): Promise<void> {
+  const { context } = github;
+  const pullNumber = context.payload.pull_request?.number;
+  if (!pullNumber) {
+    core.warning("comment-on-pr is enabled but this is not a pull request event. Skipping comment.");
+    return;
+  }
+
+  const workspacePath = process.env.GITHUB_WORKSPACE || "";
+  const relativeFiles = filesNotCovered.map((f) =>
+    f.startsWith(workspacePath) ? f.slice(workspacePath.length + 1) : f
+  );
+
+  const body = [
+    COMMENT_MARKER,
+    `## CODEOWNERS Coverage`,
+    "",
+    `**${totalFiles - filesNotCovered.length}/${totalFiles} (${coveragePercent.toFixed(2)}%)** files covered by CODEOWNERS`,
+    "",
+    `### ${filesNotCovered.length} file(s) not covered`,
+    "",
+    ...relativeFiles.map((f) => `- \`${f}\``),
+  ].join("\n");
+
+  const { owner, repo } = context.repo;
+
+  const { data: comments } = await octokit.rest.issues.listComments({
+    owner,
+    repo,
+    issue_number: pullNumber,
+  });
+
+  const existing = comments.find(
+    (c) => c.body?.includes(COMMENT_MARKER)
+  );
+
+  if (existing) {
+    await octokit.rest.issues.updateComment({
+      owner,
+      repo,
+      comment_id: existing.id,
+      body,
+    });
+    core.info("Updated existing CODEOWNERS coverage PR comment.");
+  } else {
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: pullNumber,
+      body,
+    });
+    core.info("Created CODEOWNERS coverage PR comment.");
+  }
+}
 
 function codeownerPatternToGlob(pattern: string): string {
   // CODEOWNERS patterns are kind of like gitignore. By default
