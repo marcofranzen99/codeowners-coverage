@@ -1,8 +1,14 @@
-# CODEOWNERS Coverage Action
+# CODEOWNERS Coverage Extended
 
 An [Action](https://docs.github.com/en/actions) that checks if files are covered by the [CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) file.
 
-Forked because the upstream repo hasn't been updated in a couple years.
+Forked from [sibipro/codeowners-coverage](https://github.com/sibipro/codeowners-coverage) to add PR comment support and debug logging improvements.
+[sibipro/codeowners-coverage](https://github.com/sibipro/codeowners-coverage) is itself a fork of [austenstone/codeowners-coverage](https://github.com/austenstone/codeowners-coverage), which is no longer actively maintained.
+
+### Changes from sibipro fork
+
+- **PR comments** — New `comment-on-pr` input to post/update a comment on PRs listing uncovered files with coverage percentage. The comment is automatically updated when all files become covered.
+- **Debug logging** — Verbose output (file lists, glob patterns) is now gated behind debug mode instead of always logging.
 
 ## Usage
 Create a workflow (eg: `.github/workflows/seat-count.yml`). See [Creating a Workflow file](https://help.github.com/en/articles/configuring-a-workflow#creating-a-workflow-file).
@@ -29,7 +35,7 @@ jobs:
     name: Run Action
     runs-on: ubuntu-latest
     steps:
-      - uses: marcofranzen99/codeowners-coverage@v1
+      - uses: marcofranzen99/codeowners-coverage@v2.0
 ```
 
 #### Example with PR comment
@@ -48,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: marcofranzen99/codeowners-coverage@v1
+      - uses: marcofranzen99/codeowners-coverage@v2.0
         with:
           comment-on-pr: 'true'
 ```
@@ -69,7 +75,7 @@ jobs:
       - uses: actions/checkout@v3
       - id: changed-files
         uses: tj-actions/changed-files@v29.0.3
-      - uses: marcofranzen99/codeowners-coverage@v1
+      - uses: marcofranzen99/codeowners-coverage@v2.0
         with:
           ignore-default: 'true'
           files: ${{ steps.changed-files.outputs.all_changed_files }}

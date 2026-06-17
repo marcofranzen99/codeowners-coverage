@@ -1,5 +1,5 @@
-name: CODEOWNERS Coverage
-author: Austen Stone
+name: CODEOWNERS Coverage Extended
+author: Marco Franzen
 description: Checks if files are covered by the CODEOWNERS file
 branding:
   icon: "user"
